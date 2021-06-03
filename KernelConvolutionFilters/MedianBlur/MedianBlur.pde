@@ -2,26 +2,21 @@ PImage inputImg;
 PImage outputImg;
 
 int W = 1920, H = 1080;
-int newW, newH;
-float[][] kernel = { 
-  { 1, 1, 1, 1, 1 },
-  { 1, 1, 1, 1, 1 },
-  { 1, 1, 1, 1, 1 },
-  { 1, 1, 1, 1, 1 },
-  { 1, 1, 1, 1, 1 }
-};
+float[][] kernel;
+int kernelSize = 9;
 
 float kernelVal = 0;
 
 void setup() {
   size(1920, 1080);
+  kernel = new float[kernelSize][kernelSize];
   inputImg = loadImage("input/landscape.jpg");
-  newW = W - kernel[0].length + 1;
-  newH = H - kernel[0].length + 1;
-  outputImg = createImage(W, H, RGB);
+  outputImg = createImage(W, H, RGB);    
+       
+  kernelVal = kernel[0].length * kernel[0].length;
   for(int i = 0; i < kernel[0].length; i++)
     for(int j = 0; j < kernel[0].length; j++)
-      kernelVal += kernel[i][j];
+      kernel[i][j] = 1;
 }
 
 void draw() {
