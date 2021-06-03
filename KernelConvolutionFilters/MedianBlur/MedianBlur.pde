@@ -40,12 +40,10 @@ void draw() {
            sumR += kernel[x][y] * red(inputImg.pixels[tileIndex]);
            sumG += kernel[x][y] * green(inputImg.pixels[tileIndex]);
            sumB += kernel[x][y] * blue(inputImg.pixels[tileIndex]);
-           //println(red(pixels[newI + newJ * newW]));
          }     
       }
       
       color c = color(sumR / kernelVal, sumG / kernelVal, sumB / kernelVal);
-      //color c = color(0, 255, 0);
       outputImg.pixels[i + j * W] = c;
 
 
@@ -55,7 +53,5 @@ void draw() {
   }
   image(outputImg, 0, 0);
   saveFrame("output/median_blur.png");
-  //image(img, 0, 0);
-  //image(smaller, 0, 0);
   noLoop();
 }
