@@ -43,8 +43,8 @@ function calculateResizeCanvas() {
     let parent = canvas.elt.parentElement;
     let maxWidth = parent.offsetWidth;
     let maxHeight = parent.offsetHeight;
-
-    if (inputImg) {
+    
+    if (inputImg){
         let imgRatio = inputImg.width / inputImg.height;
         if (maxWidth >= inputImg.width && maxHeight >= inputImg.height) resizeCanvas(inputImg.width, inputImg.height);
         else {
@@ -64,13 +64,31 @@ function windowResized() {
 let kernelRadius = 1;
 let kernelSize;
 let kernel = [];
-let kernelVal = 0;
+let sum;
+let a = 0;
 
 function generateKernel() {
-    kernelRadius = document.getElementById('radius-slider').value;
+    kernelRadius = parseInt(document.getElementById('radius-slider').value);
     kernelSize = kernelRadius * 2 + 1;
-    kernel = new Array(kernelSize).fill(new Array(kernelSize).fill(1));
-    kernelVal = kernelSize * kernelSize;
+    kernel = [];
+    sum = 0;
+    let sigma = max(kernelRadius / 2, 1);
+
+    for (let i = -kernelRadius; i < kernelRadius + 1; i++) {
+        kernel[i + kernelRadius] = [];
+        for (let j = -kernelRadius; j < kernelRadius + 1; j++) {
+            let expNumerator = -(i * i + j * j);
+            let expDenominator = 2 * sigma * sigma;
+            let eExp = Math.exp(expNumerator / expDenominator);
+            let kernelVal = eExp / (2 * PI * sigma * sigma);
+            kernel[i + kernelRadius][j + kernelRadius] = kernelVal;
+            sum += kernelVal;
+        }
+    }
+    for (let i = 0; i < kernelSize; i++)
+        for (let j = 0; j < kernelSize; j++)
+            kernel[i][j] /= sum;
+
 }
 
 let w;
@@ -111,11 +129,13 @@ function processFilter() {
         }
 
         let index = (i + j * w) * 4;
-        outputImg.pixels[index] = sumR / kernelVal;
-        outputImg.pixels[index + 1] = sumG / kernelVal;
-        outputImg.pixels[index + 2] = sumB / kernelVal;
-        outputImg.pixels[index + 3] = sumA / kernelVal;
+        let a = 1;
+        outputImg.pixels[index] = sumR / a;
+        outputImg.pixels[index + 1] = sumG / a;
+        outputImg.pixels[index + 2] = sumB / a;
+        outputImg.pixels[index + 3] = sumA / a;
     }
+
     j++;
     if (j < h) setTimeout(processFilter, 0);
     else {
@@ -129,7 +149,6 @@ function processFilter() {
         document.getElementById('file-input').disabled = false;
         document.getElementById('input-overlay').classList.remove('overlay-show');
         document.getElementById('notification').classList.add('notification-show');
-
     }
 }
 
