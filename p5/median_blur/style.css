@@ -197,7 +197,8 @@ p {
 }
 
 #radius-value {
-    padding-left: 10px;
+    margin-left: 10px;
+    max-width: 5rem;
 }
 
 .warning {

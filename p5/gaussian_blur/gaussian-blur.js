@@ -2,6 +2,8 @@ let canvas;
 let inputImg;
 let outputImg;
 
+let MAX_RADIUS = 1000;
+
 function setup() {
     let input = createFileInput(loadImg, false).elt;
     input.classList.add('form-control');
@@ -16,6 +18,16 @@ function setup() {
     document.getElementById('notification-close').addEventListener('click', () => {
         document.getElementById('notification').classList.remove('notification-show');
     })
+
+    let range = document.getElementById('radius-slider');
+    let field = document.getElementById('radius-value');
+    range.addEventListener('input', function (e) {
+        field.value = e.target.value;
+    });
+    field.addEventListener('input', function (e) {
+        if (e.target.value > MAX_RADIUS) e.target.value = MAX_RADIUS;
+        range.value = e.target.value;
+    });
 }
 
 let showInput = true;
@@ -43,8 +55,8 @@ function calculateResizeCanvas() {
     let parent = canvas.elt.parentElement;
     let maxWidth = parent.offsetWidth;
     let maxHeight = parent.offsetHeight;
-    
-    if (inputImg){
+
+    if (inputImg) {
         let imgRatio = inputImg.width / inputImg.height;
         if (maxWidth >= inputImg.width && maxHeight >= inputImg.height) resizeCanvas(inputImg.width, inputImg.height);
         else {
@@ -66,28 +78,27 @@ let kernelSize;
 let kernel = [];
 let sum;
 let a = 0;
+let horizontalPass;
 
 function generateKernel() {
     kernelRadius = parseInt(document.getElementById('radius-slider').value);
     kernelSize = kernelRadius * 2 + 1;
     kernel = [];
+    horizontalPass = new Array(inputImg.width * inputImg.height * 4);
     sum = 0;
+
     let sigma = max(kernelRadius / 2, 1);
 
     for (let i = -kernelRadius; i < kernelRadius + 1; i++) {
-        kernel[i + kernelRadius] = [];
-        for (let j = -kernelRadius; j < kernelRadius + 1; j++) {
-            let expNumerator = -(i * i + j * j);
-            let expDenominator = 2 * sigma * sigma;
-            let eExp = Math.exp(expNumerator / expDenominator);
-            let kernelVal = eExp / (2 * PI * sigma * sigma);
-            kernel[i + kernelRadius][j + kernelRadius] = kernelVal;
-            sum += kernelVal;
-        }
+        let expNumerator = -(i * i);
+        let expDenominator = 2 * sigma * sigma;
+        let eExp = Math.exp(expNumerator / expDenominator);
+        let kernelVal = eExp / (2 * PI * sigma * sigma);
+        kernel[i + kernelRadius] = kernelVal;
+        sum += kernelVal;
     }
     for (let i = 0; i < kernelSize; i++)
-        for (let j = 0; j < kernelSize; j++)
-            kernel[i][j] /= sum;
+        kernel[i] /= sum;
 
 }
 
@@ -100,11 +111,11 @@ function filterImage() {
     inputImg.loadPixels();
     outputImg.loadPixels();
 
-    processFilter();
+    processFilterHorizontal();
 }
 
 let j = 0;
-function processFilter() {
+function processFilterHorizontal() {
     for (let i = 0; i < w; i++) {
         let sumR = 0;
         let sumG = 0;
@@ -112,32 +123,56 @@ function processFilter() {
         let sumA = 0;
 
         for (let x = 0; x < kernelSize; x++) {
-            for (let y = 0; y < kernelSize; y++) {
-                let xIndex = i + x - kernelRadius;
-                if (xIndex < 0) xIndex = 0;
-                else if (xIndex >= w) xIndex = w - 1;
+            let xIndex = i + x - kernelRadius;
+            if (xIndex < 0) xIndex = 0;
+            else if (xIndex >= w) xIndex = w - 1;
+            let tileIndex = (xIndex + j * w) * 4;
 
-                let yIndex = j + y - kernelRadius;
-                if (yIndex < 0) yIndex = 0;
-                else if (yIndex >= h) yIndex = h - 1;
-                let tileIndex = (xIndex + yIndex * w) * 4;
-                sumR += kernel[x][y] * inputImg.pixels[tileIndex];
-                sumG += kernel[x][y] * inputImg.pixels[tileIndex + 1];
-                sumB += kernel[x][y] * inputImg.pixels[tileIndex + 2];
-                sumA += kernel[x][y] * inputImg.pixels[tileIndex + 3];
-            }
+            sumR += kernel[x] * inputImg.pixels[tileIndex];
+            sumG += kernel[x] * inputImg.pixels[tileIndex + 1];
+            sumB += kernel[x] * inputImg.pixels[tileIndex + 2];
+            sumA += kernel[x] * inputImg.pixels[tileIndex + 3];
+        }
+        let index = (i + j * w) * 4;
+        horizontalPass[index] = sumR;
+        horizontalPass[index + 1] = sumG;
+        horizontalPass[index + 2] = sumB;
+        horizontalPass[index + 3] = sumA;
+    }
+    j++;
+    if (j < h) setTimeout(processFilterHorizontal, 0);
+    else {
+        j = 0;
+        processFilterVertical();
+    }
+}
+
+function processFilterVertical() {
+    for (let i = 0; i < w; i++) {
+        let sumR = 0;
+        let sumG = 0;
+        let sumB = 0;
+        let sumA = 0;
+
+        for (let y = 0; y < kernelSize; y++) {
+            let yIndex = j + y - kernelRadius;
+            if (yIndex < 0) yIndex = 0;
+            else if (yIndex >= h) yIndex = h - 1;
+            let tileIndex = (i + yIndex * w) * 4;
+            sumR += kernel[y] * horizontalPass[tileIndex];
+            sumG += kernel[y] * horizontalPass[tileIndex + 1];
+            sumB += kernel[y] * horizontalPass[tileIndex + 2];
+            sumA += kernel[y] * horizontalPass[tileIndex + 3];
         }
 
         let index = (i + j * w) * 4;
-        let a = 1;
-        outputImg.pixels[index] = sumR / a;
-        outputImg.pixels[index + 1] = sumG / a;
-        outputImg.pixels[index + 2] = sumB / a;
-        outputImg.pixels[index + 3] = sumA / a;
+        outputImg.pixels[index] = sumR;
+        outputImg.pixels[index + 1] = sumG;
+        outputImg.pixels[index + 2] = sumB;
+        outputImg.pixels[index + 3] = sumA;
     }
-
     j++;
-    if (j < h) setTimeout(processFilter, 0);
+    if (j < h) setTimeout(processFilterVertical, 0);
     else {
         j = 0;
         outputImg.updatePixels();
@@ -149,6 +184,7 @@ function processFilter() {
         document.getElementById('file-input').disabled = false;
         document.getElementById('input-overlay').classList.remove('overlay-show');
         document.getElementById('notification').classList.add('notification-show');
+
     }
 }
 
@@ -171,8 +207,4 @@ function downloadOutput() {
         return;
     }
     outputImg.save('median-blur');
-}
-
-function updateRadiusLabel() {
-    document.getElementById('radius-value').innerHTML = document.getElementById('radius-slider').value;
 }

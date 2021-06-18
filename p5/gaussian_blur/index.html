@@ -8,12 +8,12 @@
     <title>Gaussian Blur</title>
     <link rel="stylesheet" type="text/css" href="../bootstrap-5.0.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <script type="text/javascript" src="../bootstrap-5.0.1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../p5.min.js"></script>
-    <script type="text/javascript" src="gaussian-blur.js"></script>
 </head>
 
 <body>
+    <script type="text/javascript" src="../bootstrap-5.0.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../p5.min.js"></script>
+    <script type="text/javascript" src="gaussian-blur.js"></script>
     <div class="page">
         <div class="header">
             <header>
@@ -82,9 +82,8 @@
                             </form>
                         </div>
                         <div class="preferences-container">
-                            <label>Filter radius: </label><label id="radius-value">1</label>
-                            <input id="radius-slider" min="1" max="20" class="form-range radius-range" type="range"
-                                oninput="updateRadiusLabel()">
+                            <label>Filter radius: </label><input id="radius-value" type="number" min="1" max="1000" value="1">
+                            <input id="radius-slider" min="1" max="100" value="1" class="form-range radius-range" type="range">
                         </div>
                         <div class="button-container">
                             <button type="button" id="btn-start" class="btn btn-primary btn-start"
