@@ -21,7 +21,7 @@ function setup() {
 
 let showInput = true;
 function draw() {
-    background(127);
+    background(255);
     noStroke();
     if (inputImg && showInput) image(inputImg, 0, 0, width, height);
     else if (outputImg) image(outputImg, 0, 0, width, height);
@@ -167,7 +167,7 @@ function setEdgeValues() {
         outputImg.pixels[index] = val;
         outputImg.pixels[index + 1] = val;
         outputImg.pixels[index + 2] = val;
-        outputImg.pixels[index + 3] = val;
+        outputImg.pixels[index + 3] = 255;
     }
     j++;
     if (j < h) setTimeout(setEdgeValues, 0);
